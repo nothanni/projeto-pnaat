@@ -6,11 +6,17 @@
 
 ## 1. O que é este projeto (Visão Geral)
 
-Sistema IoT para automatizar a contagem de peças produzidas em estações de
-trabalho manuais, eliminando o apontamento manual em planilhas e
-disponibilizando o ritmo de produção em tempo real para a gestão. Cada estação
-possui sensores de proximidade e um nó de processamento local (ESP32-S3), que
-mantém a contagem funcionando mesmo durante indisponibilidade de rede.
+Em estações de trabalho manuais, operadores precisam interromper sua atividade
+periodicamente para registrar a produção em planilhas, o que consome tempo
+produtivo, gera erros de contagem e atrasa a visibilidade da gestão sobre o
+ritmo real da linha (Cenário 6).
+
+Para resolver isso, propomos um Sistema IoT para automatizar a contagem de
+peças produzidas em estações de trabalho manuais, eliminando o apontamento
+manual em planilhas e disponibilizando o ritmo de produção em tempo real para
+a gestão. Cada estação possui sensores de proximidade e um nó de
+processamento local (ESP32-S3), que mantém a contagem funcionando mesmo
+durante indisponibilidade de rede.
 
 O sistema detecta a chegada e a saída de peças na bancada, calcula o ritmo de
 produção, identifica microparadas e envia os dados via MQTT para um painel
