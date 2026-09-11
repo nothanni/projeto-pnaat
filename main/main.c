@@ -1,11 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "driver/gpio.h"
+#include <inttypes.h>
+#include <stdatomic.h>
+#include <stdint.h>
+#include "e18d80nk.h"
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_netif.h"
 #include "esp_netif_sntp.h"
+#include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/projdefs.h"
 #include "freertos/task.h"
@@ -16,7 +20,8 @@
 #include "oled_setup.h"
 #include "protocol_examples_common.h"
 
-#define FRONT_SENSOR_PIN 36
+#define SENSOR_GPIO GPIO_NUM_4
+#define COUNT_COALESCE_US (1000 * 1000) /* detections within 1s count as one */
 #define MQTT_TOPIC "pnaatos/poc"
 
 static const char TAG[] = "main";
@@ -25,6 +30,8 @@ extern lv_disp_t *local_disp;
 
 static esp_mqtt_client_handle_t mqtt_client;
 static _Atomic bool mqtt_connected;
+static _Atomic uint32_t prod_count;
+static int64_t last_count_us; /* only touched by the sensor callback task */
 
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
                                int32_t event_id, void *event_data) {
@@ -95,7 +102,33 @@ static void obtain_time(void) {
   ESP_LOGI(TAG, "System time synchronized");
 }
 
-static void publish_count(int count) {
+// Runs in the e18d80nk_task context on every state change of the sensor.
+// Counts only the start of each detection (object entering the beam) and
+// coalesces multiple detections within the same 1s window into one increment.
+static void sensor_callback(bool object_detected, void *ctx) {
+  if (!object_detected) {
+    return;
+  }
+  int64_t now_us = esp_timer_get_time();
+  if (now_us - last_count_us >= COUNT_COALESCE_US) {
+    last_count_us = now_us;
+    atomic_fetch_add(&prod_count, 1);
+  }
+}
+
+static void sensor_start(void) {
+  e18d80nk_handle_t sensor;
+  e18d80nk_config_t cfg = {
+      .gpio_num = SENSOR_GPIO,
+      .active_low = true,   /* most E18-D80NK modules pull the signal LOW on detection */
+      .use_interrupt = true,
+      .on_change = sensor_callback,
+      .user_ctx = NULL,
+  };
+  ESP_ERROR_CHECK(e18d80nk_init(&cfg, &sensor));
+}
+
+static void publish_count(uint32_t count) {
   if (mqtt_client == NULL || !mqtt_connected) {
     return;
   }
@@ -108,8 +141,8 @@ static void publish_count(int count) {
   strftime(ts, sizeof(ts), "%Y-%m-%dT%H:%M:%S", &timeinfo);
 
   char payload[96];
-  snprintf(payload, sizeof(payload), "{\"count\": %d, \"ts\": \"%s\"}", count,
-           ts);
+  snprintf(payload, sizeof(payload),
+           "{\"count\": %" PRIu32 ", \"ts\": \"%s\"}", count, ts);
 
   int msg_id = esp_mqtt_client_publish(mqtt_client, MQTT_TOPIC, payload, 0, 0, 0);
   if (msg_id < 0) {
@@ -137,36 +170,24 @@ void app_main(void) {
   obtain_time();
 
   mqtt_app_start();
+  sensor_start();
 
   i2c_port_t i2c_port_num = I2C_NUM_0;
   initialize_i2c(&i2c_port_num);
-
-  gpio_config_t io_conf = {
-      .intr_type = GPIO_INTR_DISABLE,
-      .mode = GPIO_MODE_OUTPUT,
-      .pin_bit_mask = (1ULL << FRONT_SENSOR_PIN),
-      .pull_down_en = GPIO_PULLDOWN_DISABLE,
-      .pull_up_en = GPIO_PULLUP_ENABLE,
-  };
-  esp_err_t err = gpio_config(&io_conf);
-  if (err != ESP_OK) {
-    ESP_LOGE(TAG, "GPIO config failed: %d", err);
-  }
-  err = gpio_set_level(FRONT_SENSOR_PIN, 0);
-  if (err != ESP_OK) {
-    ESP_LOGE(TAG, "Failed to set pin level");
-  }
 
   vTaskDelay(pdMS_TO_TICKS(100));
   configure_oled_screen(&i2c_port_num);
   oled_printf_init(local_disp);
 
   ESP_LOGI(TAG, "Enter in the main loop...");
-  int count = 0;
+  uint32_t last_count = 0;
   while (1) {
-    printf_oled("Count: %d", count);
-    publish_count(count);
-    count++;
-    vTaskDelay(pdMS_TO_TICKS(1000));
+    uint32_t count = atomic_load(&prod_count);
+    if (count != last_count) {
+      last_count = count;
+      printf_oled("Count: %lu", (unsigned long)count);
+      publish_count(count);
+    }
+    vTaskDelay(pdMS_TO_TICKS(200));
   }
 }
