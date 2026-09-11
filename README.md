@@ -78,9 +78,20 @@ flowchart TD
 - Componentes locais (em `components/`): `i2c_config` (inicialização do
   barramento I2C), `oled_setup` (configuração do display) e `oled_printf`
   (abstração de escrita de texto no display)
+- Sensoriamento: componente local `e18d80nk` (`components/e18d80nk/`) — driver
+  do sensor de proximidade E18-D80NK, com leitura por interrupção e filtragem
+  de detecções repetidas dentro de 1 segundo
+- Conectividade Wi-Fi: `protocol_examples_common` (componente de exemplo do
+  ESP-IDF)
+- Cliente MQTT: `esp-mqtt` (componente padrão do ESP-IDF)
+- Sincronização de horário: `esp_netif_sntp`
+- Persistência: `nvs_flash`
 
 ### Infraestrutura
-- Broker MQTT com autenticação — **a definir**
+- Broker MQTT: atualmente configurado para o broker público de teste
+  `broker.mqttdashboard.com` (HiveMQ), **sem TLS e sem autenticação** nesta
+  fase de prototipagem. Um broker com autenticação (RNF-14) será definido
+  para a versão final.
 - Painel Web — **(tecnologia/framework a definir)**
 - Ambiente de desenvolvimento containerizado via **Dev Container**
   (`.devcontainer/devcontainer.json` + `Dockerfile`), baseado na imagem oficial
@@ -94,7 +105,7 @@ flowchart TD
 - [x] Extensão **Dev Containers** (Microsoft) instalada no VS Code
 - [x] Extensão **ESP-IDF** (Espressif Systems) — instalada automaticamente ao
   abrir o projeto no Dev Container, conforme `devcontainer.json`
-- [ ] Broker MQTT configurado e acessível na rede de testes — **a definir**
+- [x] Broker MQTT de teste já configurado por padrão (`broker.mqttdashboard.com`) — sem autenticação
 
 ## 5. Como rodar
 
@@ -121,7 +132,9 @@ flowchart TD
    idf.py -p (PORTA) flash monitor
    ```
 
-> **Nota:** o firmware atual já inicializa o barramento I2C e o display OLED
-> via LVGL, exibindo um contador incremental na tela como validação do ambiente
-> gráfico. A leitura dos sensores de proximidade e a lógica de contagem de
-> peças (RF-01 a RF-03) ainda não foram implementadas.
+> **Nota:** o firmware já implementa a leitura do sensor de proximidade
+> (RF-01/RF-02), publicação da contagem via MQTT (RF-05) e exibição no
+> display OLED. Wi-Fi e sincronização de horário via NTP também estão
+> funcionais. Ainda não implementados: sensor de saída dedicado, cálculo de
+> ritmo de produção, detecção de microparadas, armazenamento offline (buffer)
+> e reenvio de backlog.
