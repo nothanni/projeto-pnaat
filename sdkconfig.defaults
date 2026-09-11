@@ -1,0 +1,5 @@
+# Application binary grew beyond the default 1 MB factory partition after
+# adding Wi-Fi + MQTT (with TLS transport) + network stacks. Use the larger
+# single-app partition table (factory: 1500K), which fits the 2 MB flash of
+# the target board.
+CONFIG_PARTITION_TABLE_SINGLE_APP_LARGE=y
