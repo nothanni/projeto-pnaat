@@ -71,9 +71,13 @@ flowchart TD
 
 ### Software / Firmware
 - Linguagem: **C**
-- Framework: **ESP-IDF** (Espressif IoT Development Framework)
+- Framework: **ESP-IDF** (Espressif IoT Development Framework), versão 5.5.5
 - Ambiente de desenvolvimento: **Visual Studio Code** com a extensão oficial **ESP-IDF** (Espressif Systems)
-- Componentes/bibliotecas previstos — **a definir**
+- Bibliotecas gráficas: **LVGL** (`lvgl/lvgl`, v9.2.0) e **esp_lvgl_port**
+  (`espressif/esp_lvgl_port`, v2.5.0) — renderização de interface no display OLED
+- Componentes locais (em `components/`): `i2c_config` (inicialização do
+  barramento I2C), `oled_setup` (configuração do display) e `oled_printf`
+  (abstração de escrita de texto no display)
 
 ### Infraestrutura
 - Broker MQTT com autenticação — **a definir**
@@ -117,4 +121,7 @@ flowchart TD
    idf.py -p (PORTA) flash monitor
    ```
 
-> **Nota:** os passos acima validam a configuração do ambiente de desenvolvimento.
+> **Nota:** o firmware atual já inicializa o barramento I2C e o display OLED
+> via LVGL, exibindo um contador incremental na tela como validação do ambiente
+> gráfico. A leitura dos sensores de proximidade e a lógica de contagem de
+> peças (RF-01 a RF-03) ainda não foram implementadas.
