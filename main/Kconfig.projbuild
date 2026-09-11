@@ -1,0 +1,15 @@
+menu "Application Configuration"
+
+    config BROKER_URL
+        string "Broker URL"
+        default "mqtt://broker.mqttdashboard.com"
+        help
+            URL of the MQTT broker to connect to.
+
+    config SNTP_TIME_SERVER
+        string "SNTP server name"
+        default "time.google.com"
+        help
+            Hostname of the main SNTP server used for time synchronization.
+
+endmenu
