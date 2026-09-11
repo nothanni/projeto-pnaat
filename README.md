@@ -22,7 +22,7 @@ O sistema detecta a chegada e a saída de peças na bancada, calcula o ritmo de
 produção, identifica microparadas e envia os dados via MQTT para um painel
 gerencial, sem depender de intervenção manual do operador para o registro.
 
-## 2. Diagrama de Blocos
+## 2. Diagrama de Blocos (preliminar)
 
 ```mermaid
 flowchart TD
@@ -132,9 +132,6 @@ flowchart TD
    idf.py -p (PORTA) flash monitor
    ```
 
-> **Nota:** o firmware já implementa a leitura do sensor de proximidade
-> (RF-01/RF-02), publicação da contagem via MQTT (RF-05) e exibição no
-> display OLED. Wi-Fi e sincronização de horário via NTP também estão
-> funcionais. Ainda não implementados: sensor de saída dedicado, cálculo de
-> ritmo de produção, detecção de microparadas, armazenamento offline (buffer)
-> e reenvio de backlog.
+> **Nota:** o firmware já implementa a leitura de eventos de passagem via sensor de 
+proximidade (RF-01), publicação da contagem via MQTT (RF-05) e exibição 
+no display OLED.
