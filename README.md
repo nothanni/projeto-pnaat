@@ -1,7 +1,7 @@
 # Projeto i++ — Sistema IoT para Contagem e Monitoramento da Produção
 
 > **Equipe:** Os Pnaatos.
-> **Integrantes:**  Emily Fernanda, João Isaac, Paula Hânnia, Vitória Maciel.
+> **Integrantes:** Emily Fernanda, João Isaac, Paula Hânnia, Vitória Maciel.
 > **Cenário:** 6 — Contagem automatizada de produtos e gestão de dados no ambiente industrial.
 
 ## 1. O que é este projeto (Visão Geral)
@@ -78,12 +78,43 @@ flowchart TD
 ### Infraestrutura
 - Broker MQTT com autenticação — **a definir**
 - Painel Web — **(tecnologia/framework a definir)**
+- Ambiente de desenvolvimento containerizado via **Dev Container**
+  (`.devcontainer/devcontainer.json` + `Dockerfile`), baseado na imagem oficial
+  `espressif/idf`, permitindo que qualquer um rode o projeto sem
+  precisar instalar a toolchain do ESP-IDF manualmente na própria máquina.
 
-## 4. Pré-requisitos (a detalhar)
+## 4. Pré-requisitos
 
-- [ ] Visual Studio Code instalado
-- [ ] Extensão ESP-IDF instalada e configurada no VS Code
-- [ ] Toolchain do ESP-IDF configurada (via instalador da própria extensão)
-- [ ] Broker MQTT configurado e acessível na rede de testes
+- [x] Docker instalado (necessário para o Dev Container)
+- [x] Visual Studio Code instalado
+- [x] Extensão **Dev Containers** (Microsoft) instalada no VS Code
+- [x] Extensão **ESP-IDF** (Espressif Systems) — instalada automaticamente ao
+  abrir o projeto no Dev Container, conforme `devcontainer.json`
+- [ ] Broker MQTT configurado e acessível na rede de testes — **a definir**
 
-## 5. Como rodar (a detalhar nas próximas entregas)
+## 5. Como rodar
+
+1. Clone o repositório:
+   ```
+   git clone https://github.com/nothanni/projeto-pnaat.git
+   ```
+2. Abra a pasta no Visual Studio Code.
+3. Quando solicitado, clique em **"Reopen in Container"** (ou execute o comando
+   `Dev Containers: Reopen in Container` na paleta de comandos do VS Code).
+4. Aguarde o build da imagem Docker (`Dockerfile`) e a inicialização do
+   ambiente ESP-IDF dentro do container.
+5. No terminal do container, defina o target para o ESP32-S3:
+   ```
+   idf.py set-target esp32s3
+   ```
+6. Compile o projeto (código-fonte principal em `main/main.c`, configuração de
+   build em `CMakeLists.txt` e `main/CMakeLists.txt`):
+   ```
+   idf.py build
+   ```
+7. Grave no dispositivo e monitore a saída serial:
+   ```
+   idf.py -p (PORTA) flash monitor
+   ```
+
+> **Nota:** os passos acima validam a configuração do ambiente de desenvolvimento.
